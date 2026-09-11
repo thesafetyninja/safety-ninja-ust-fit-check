@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Safety Ninja UST Fit Check</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; background: #111827; color: white; }
+    .card { transition: all 0.2s; background: #FEFEFE; color: #111827; border: 3px solid #FFD31F !important; }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.2); }
+    .badge-fit { background: #d1fae5; color: #065f46; border: 2px solid #10b981; }
+    .badge-nofit { background: #fee2e2; color: #991b1b; border: 2px solid #ef4444; }
+    .badge-over { background: #fef3c7; color: #92400e; border: 2px solid #f59e0b; }
+    .badge-wait { background: #f3f4f6; color: #4b5563; border: 2px solid #d1d5db; }
+    input, select { color: #111827; }
+  </style>
+</head>
+<body class="py-6">
+
+<div class="max-w-2xl mx-auto px-4">
+  <div class="mb-6 text-center">
+    <h1 class="text-xl font-bold tracking-wide" style="color:#FFD31F">UST 90% FIT CHECK</h1>
+    <p class="text-sm text-gray-400 mt-1">Corrected generic tank chart · 3 tanks · whole inches</p>
+  </div>
+
+  <div id="tanks" class="space-y-6 mb-8"></div>
+
+  <p class="text-xs text-gray-500 text-center px-2 leading-relaxed">
+    Generic inch-to-gallon chart with 12 mathematically corrected rows (impossible dips / isolated spikes).
+    90% cap = 90% of the selected rated gallons. Site-specific charts or ATG readings override this tool.
+  </p>
+</div>
+
+<script>
+const CHART = {
+  1000: [null, 5, 15, 28, 43, 60, 79, 99, 120, 142, 165, 189, 213, 239, 263, 291, 318, 345, 373, 401, 429, 457, 485, 514, 542, 570, 598, 626, 654, 682, 709, 735, 762, 787, 812, 836, 860, 882, 904, 924, 944, 961, 977, 991, 1003, 1011],
+  2000: [null, 5, 14, 27, 41, 57, 75, 94, 114, 136, 159, 182, 207, 232, 258, 285, 313, 341, 370, 399, 429, 459, 490, 521, 553, 584, 617, 650, 683, 716, 749, 783, 816, 850, 884, 918, 952, 987, 1021, 1055, 1089, 1123, 1158, 1191, 1225, 1259, 1295, 1307, 1359, 1392, 1425, 1457, 1489, 1521, 1552, 1583, 1613, 1643, 1672, 1704, 1719, 1757, 1784, 1810, 1835, 1860, 1883, 1905, 1927, 1947, 1967, 1985, 2001, 2015, 2027, 2037, 2042],
+  3000: [null, 8, 22, 40, 62, 86, 112, 141, 204, 238, 256, 273, 310, 348, 387, 428, 469, 511, 555, 599, 644, 689, 735, 782, 830, 878, 926, 975, 1024, 1074, 1124, 1174, 1225, 1276, 1327, 1378, 1429, 1480, 1532, 1583, 1634, 1685, 1736, 1787, 1838, 1889, 1939, 1961, 2039, 2088, 2137, 2185, 2234, 2281, 2328, 2374, 2420, 2464, 2508, 2552, 2578, 2635, 2676, 2715, 2753, 2790, 2825, 2859, 2891, 2922, 2951, 2977, 3001, 3023, 3041, 3055, 3063],
+  4000: [null, 10, 29, 52, 81, 112, 147, 185, 225, 257, 311, 358, 406, 455, 508, 560, 614, 669, 725, 783, 842, 901, 962, 1023, 1085, 1148, 1211, 1275, 1340, 1404, 1470, 1536, 1602, 1668, 1735, 1802, 1869, 1936, 2003, 2070, 2137, 2244, 2271, 2337, 2404, 2470, 2535, 2601, 2666, 2731, 2795, 2858, 2921, 2983, 3044, 3105, 3164, 3223, 3280, 3337, 3372, 3445, 3499, 3550, 3600, 3648, 3694, 3739, 3781, 3821, 3859, 3894, 3925, 3953, 3977, 3996, 4006],
+  5000: [null, 9, 26, 48, 74, 104, 136, 172, 208, 248, 289, 332, 377, 424, 472, 522, 573, 625, 679, 734, 790, 846, 904, 963, 1023, 1083, 1144, 1206, 1269, 1332, 1396, 1461, 1526, 1592, 1657, 1724, 1791, 1858, 1925, 1993, 2061, 2128, 2198, 2267, 2336, 2405, 2474, 2543, 2612, 2681, 2750, 2819, 2888, 2956, 3027, 3093, 3161, 3229, 3297, 3364, 3431, 3497, 3563, 3629, 3694, 3758, 3822, 3885, 3948, 4010, 4072, 4132, 4192, 4250, 4308, 4365, 4421, 4476, 4529, 4581, 4633, 4682, 4730, 4777, 4822, 4865, 4907, 4947, 4983, 5019, 5051, 5080, 5106, 5128, 5145, 5155],
+  6000: [null, 11, 32, 59, 90, 126, 165, 208, 253, 301, 351, 404, 458, 515, 574, 634, 696, 759, 825, 891, 959, 1028, 1098, 1169, 1242, 1315, 1389, 1465, 1541, 1618, 1695, 1774, 1853, 1933, 2012, 2093, 2174, 2256, 2338, 2420, 2503, 2584, 2669, 2753, 2836, 2920, 3004, 3088, 3172, 3255, 3339, 3423, 3507, 3590, 3675, 3756, 3839, 3921, 4003, 4085, 4166, 4247, 4327, 4407, 4486, 4564, 4642, 4719, 4795, 4870, 4944, 5018, 5090, 5161, 5232, 5300, 5368, 5425, 5500, 5563, 5625, 5686, 5744, 5801, 5856, 5909, 5959, 6007, 6052, 6094, 6133, 6169, 6200, 6227, 6248, 6260],
+  7000: [null, 13, 28, 69, 106, 148, 194, 244, 297, 354, 413, 475, 539, 606, 678, 746, 819, 894, 970, 1048, 1128, 1209, 1292, 1376, 1461, 1547, 1635, 1723, 1813, 1903, 1995, 2087, 2180, 2274, 2368, 2463, 2558, 2654, 2751, 2848, 2945, 3040, 3140, 3239, 3337, 3435, 3534, 3633, 3731, 3830, 3929, 4027, 4125, 4224, 4324, 4419, 4516, 4613, 4710, 4806, 4901, 4996, 5091, 5184, 5277, 5369, 5461, 5551, 5641, 5729, 5817, 5903, 5988, 6072, 6155, 6236, 6316, 6394, 6470, 6545, 6618, 6689, 6758, 6825, 6889, 6949, 7010, 7067, 7120, 7170, 7216, 7258, 7295, 7326, 7351, 7364],
+  8000: [null, 15, 41, 76, 117, 163, 214, 269, 327, 389, 454, 522, 593, 667, 742, 821, 901, 983, 1067, 1153, 1241, 1330, 1421, 1513, 1607, 1702, 1798, 1896, 1994, 2094, 2194, 2296, 2398, 2501, 2604, 2709, 2814, 2920, 3026, 3132, 3239, 3344, 3454, 3562, 3670, 3779, 3887, 3996, 4104, 4213, 4321, 4430, 4538, 4646, 4756, 4851, 4968, 5075, 5181, 5286, 5391, 5496, 5600, 5703, 5805, 5906, 6007, 6106, 6205, 6302, 6398, 6493, 6587, 6679, 6770, 6860, 6947, 7033, 7117, 7200, 7280, 7358, 7434, 7507, 7578, 7647, 7711, 7773, 7832, 7886, 7937, 7983, 8024, 8059, 8086, 8101],
+  10000: [null, 19, 53, 97, 149, 208, 272, 342, 416, 495, 578, 665, 755, 848, 945, 1044, 1147, 1251, 1358, 1468, 1570, 1693, 1809, 1926, 2045, 2167, 2289, 2413, 2538, 2665, 2793, 2922, 3052, 3183, 3315, 3448, 3582, 3716, 3851, 3987, 4123, 4256, 4397, 4534, 4672, 4810, 4948, 5086, 5224, 5362, 5500, 5638, 5776, 5913, 6053, 6187, 6323, 6459, 6594, 6728, 6862, 6995, 7127, 7258, 7388, 7517, 7645, 7772, 7897, 8021, 8143, 8264, 8384, 8501, 8617, 8730, 8842, 8951, 9059, 9163, 9265, 9365, 9461, 9555, 9645, 9733, 9814, 9893, 9968, 10037, 10102, 10161, 10212, 10257, 10291, 10310],
+  12000: [null, 21, 60, 111, 170, 237, 311, 391, 476, 566, 661, 760, 863, 970, 1080, 1194, 1310, 1430, 1552, 1677, 1806, 1935, 2067, 2201, 2338, 2476, 2515, 2757, 2900, 3045, 3192, 3339, 3488, 3638, 3788, 3940, 4093, 4247, 4401, 4556, 4712, 4864, 5025, 5182, 5339, 5497, 5655, 5812, 5970, 6128, 6286, 6444, 6601, 6758, 6915, 7071, 7226, 7381, 7536, 7689, 7842, 7994, 8145, 8295, 8444, 8591, 8737, 8882, 9025, 9167, 9307, 9445, 9581, 9715, 9848, 9978, 10105, 10230, 10333, 10472, 10589, 10703, 10813, 10917, 11022, 11118, 11218, 11307, 11391, 11471, 11545, 11612, 11671, 11722, 11761, 11783],
+  15000: [null, 21, 58, 107, 164, 229, 300, 377, 459, 546, 638, 734, 834, 938, 1045, 1156, 1270, 1386, 1506, 1628, 1753, 1881, 2011, 2144, 2277, 2413, 2552, 2692, 2908, 3123, 3270, 3419, 3569, 3720, 3872, 4026, 4181, 4337, 4494, 4652, 4811, 4971, 5131, 5292, 5454, 5617, 5780, 5944, 6108, 6272, 6437, 6603, 6768, 6934, 7100, 7266, 7432, 7598, 7764, 7930, 8096, 8261, 8427, 8592, 8756, 8920, 9084, 9247, 9410, 9572, 9733, 9893, 10053, 10212, 10370, 10527, 10683, 10838, 10992, 11144, 11295, 11445, 11594, 11741, 11886, 12030, 12172, 12312, 12451, 12587, 12720, 12843, 12983, 13111, 13236, 13358, 13478, 13594, 13708, 13819, 13926, 14030, 14130, 14226, 14300, 14405, 14487, 14564, 14635, 14700, 14757, 14806, 14843, 14864],
+  20000: [null, 28, 77, 141, 217, 302, 396, 437, 606, 721, 842, 969, 1101, 1238, 1380, 1525, 1676, 1830, 1988, 2149, 2318, 2483, 2654, 2828, 3006, 3186, 3368, 3553, 3741, 3931, 4123, 4317, 4512, 4710, 4910, 5111, 5314, 5519, 5724, 5932, 6141, 6350, 6561, 6773, 6986, 7199, 7414, 7629, 7845, 8062, 8279, 8497, 8715, 8934, 9152, 9371, 9590, 9809, 10028, 10248, 10466, 10685, 10903, 11121, 11339, 11556, 11773, 11989, 12204, 12419, 12633, 12846, 13058, 13268, 13478, 13687, 13894, 14100, 14304, 14507, 14708, 14908, 15106, 15302, 15496, 15688, 15878, 16065, 16250, 16433, 16613, 16790, 16965, 17136, 17300, 17469, 17631, 17789, 17943, 18093, 18239, 18331, 18518, 18650, 18776, 18898, 19013, 19121, 19223, 19317, 19402, 19477, 19542, 19619],
+};
+
+const SIZES = [1000,2000,3000,4000,5000,6000,7000,8000,10000,12000,15000,20000];
+
+function fmt(n) {
+  if (n === null || n === undefined || Number.isNaN(n)) return "—";
+  return Number(n).toLocaleString("en-US");
+}
+
+function gallonsAt(size, inches) {
+  const col = CHART[size];
+  if (!col) return null;
+  if (!Number.isInteger(inches) || inches < 1 || inches >= col.length || col[inches] == null) return null;
+  return col[inches];
+}
+
+function maxInch(size) {
+  return CHART[size].length - 1;
+}
+
+function ninetyCap(size) {
+  return Math.round(size * 0.9);
+}
+
+function inchForGallons(size, gallons) {
+  const col = CHART[size];
+  if (!col) return null;
+  if (gallons > col[col.length - 1]) return "OVER";
+  for (let i = 1; i < col.length; i++) {
+    if (col[i] >= gallons) return i;
+  }
+  return "OVER";
+}
+
+function statusBadge(kind, text) {
+  const cls = kind === "fit" ? "badge-fit" : kind === "nofit" ? "badge-nofit" : kind === "over" ? "badge-over" : "badge-wait";
+  return `<div class="rounded-2xl py-3 px-4 text-center text-2xl font-black tracking-wide ${cls}">${text}</div>`;
+}
+
+function calcTank(id) {
+  const size = Number(document.getElementById(`size-${id}`).value);
+  const inchRaw = document.getElementById(`inch-${id}`).value;
+  const galRaw = document.getElementById(`gal-${id}`).value;
+  const out = document.getElementById(`out-${id}`);
+
+  if (!size || inchRaw === "" || galRaw === "") {
+    out.innerHTML = statusBadge("wait", "ENTER DATA") + `<p class="text-sm text-gray-500 mt-3 text-center">Select tank size, stick inches, and net gallons.</p>`;
+    return;
+  }
+
+  const inches = Number(inchRaw);
+  const netGal = Number(galRaw);
+
+  if (!Number.isInteger(inches) || inches < 0 || netGal < 0 || Number.isNaN(netGal)) {
+    out.innerHTML = statusBadge("over", "CHECK ENTRIES");
+    return;
+  }
+
+  let currentGal;
+  if (inches === 0) currentGal = 0;
+  else currentGal = gallonsAt(size, inches);
+
+  if (currentGal == null) {
+    out.innerHTML = statusBadge("over", "OVER CHART MAX") +
+      `<p class="text-sm text-gray-600 mt-3 text-center">Stick ${inches}" is past the last chart row for a ${fmt(size)} gal tank (max ${maxInch(size)}").</p>`;
+    return;
+  }
+
+  const cap90 = ninetyCap(size);
+  const after = currentGal + netGal;
+  const afterInch = inchForGallons(size, after);
+  const inch90 = inchForGallons(size, cap90);
+  renderResult(out, size, inches, currentGal, netGal, after, afterInch, cap90, inch90);
+}
+
+function renderResult(out, size, inches, currentGal, netGal, after, afterInch, cap90, inch90) {
+  const overAfter = afterInch === "OVER";
+  const fits = after <= cap90;
+  let badge;
+  if (overAfter && !fits) badge = statusBadge("nofit", "NO FIT") + `<div class="mt-2">${statusBadge("over", "OVER CHART MAX")}</div>`;
+  else if (overAfter) badge = statusBadge("over", "OVER CHART MAX");
+  else if (fits) badge = statusBadge("fit", "FIT");
+  else badge = statusBadge("nofit", "NO FIT");
+
+  const room = cap90 - after;
+  const roomTxt = room >= 0
+    ? `<span class="font-semibold text-emerald-700">${fmt(room)} gal remaining to 90%</span>`
+    : `<span class="font-semibold text-red-700">${fmt(Math.abs(room))} gal over 90%</span>`;
+
+  const afterInchTxt = overAfter ? "OVER CHART MAX" : afterInch + '"';
+  const inch90Txt = inch90 === "OVER" ? "OVER CHART MAX" : inch90 + '"';
+
+  out.innerHTML = `
+    ${badge}
+    <div class="grid grid-cols-2 gap-3 mt-4 text-sm">
+      <div class="rounded-xl bg-gray-50 p-3">
+        <div class="text-xs font-bold text-gray-500 uppercase">90% Cap</div>
+        <div class="font-bold text-lg">${fmt(cap90)} gal</div>
+        <div class="text-gray-600">${inch90Txt}</div>
+      </div>
+      <div class="rounded-xl bg-gray-50 p-3">
+        <div class="text-xs font-bold text-gray-500 uppercase">Current</div>
+        <div class="font-bold text-lg">${fmt(currentGal)} gal</div>
+        <div class="text-gray-600">${inches}"</div>
+      </div>
+      <div class="rounded-xl bg-gray-50 p-3">
+        <div class="text-xs font-bold text-gray-500 uppercase">After Offload</div>
+        <div class="font-bold text-lg">${fmt(after)} gal</div>
+        <div class="text-gray-600">${afterInchTxt}</div>
+      </div>
+      <div class="rounded-xl bg-gray-50 p-3">
+        <div class="text-xs font-bold text-gray-500 uppercase">Room to 90%</div>
+        <div class="mt-1">${roomTxt}</div>
+      </div>
+    </div>`;
+}
+
+function sizeOptions() {
+  return SIZES.map(s => `<option value="${s}">${s.toLocaleString()} gal (100%)</option>`).join("");
+}
+
+function tankCard(id) {
+  return `
+  <div class="card rounded-3xl shadow-md p-6">
+    <div class="flex items-center gap-3 mb-4">
+      <i class="fas fa-database text-2xl" style="color:#219c29"></i>
+      <h2 class="font-bold text-lg uppercase tracking-wide">Tank ${id}</h2>
+    </div>
+
+    <label class="block uppercase text-blue-600 text-xs font-bold tracking-widest mb-1">100% Tank Volume</label>
+    <select id="size-${id}" onchange="calcTank(${id})" class="w-full mb-4 px-4 py-3 text-lg border border-gray-300 rounded-2xl bg-white">
+      <option value="">Select size</option>
+      ${sizeOptions()}
+    </select>
+
+    <label class="block uppercase text-blue-600 text-xs font-bold tracking-widest mb-1">Stick Reading Before (inches)</label>
+    <input id="inch-${id}" type="number" inputmode="numeric" min="0" step="1" placeholder="Whole inches" oninput="calcTank(${id})" class="w-full mb-4 px-4 py-3 text-lg border border-gray-300 rounded-2xl bg-white">
+
+    <label class="block uppercase text-blue-600 text-xs font-bold tracking-widest mb-1">Net Gallons to Offload</label>
+    <input id="gal-${id}" type="number" inputmode="numeric" min="0" step="1" placeholder="Net gallons" oninput="calcTank(${id})" class="w-full mb-5 px-4 py-3 text-lg border border-gray-300 rounded-2xl bg-white">
+
+    <div id="out-${id}"></div>
+  </div>`;
+}
+
+document.getElementById("tanks").innerHTML = [1,2,3].map(tankCard).join("");
+[1,2,3].forEach(calcTank);
+</script>
+</body>
+</html>
