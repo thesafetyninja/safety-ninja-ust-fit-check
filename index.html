@@ -15,24 +15,31 @@
     .badge-over { background: #fef3c7; color: #92400e; border: 2px solid #f59e0b; }
     .badge-wait { background: #f3f4f6; color: #4b5563; border: 2px solid #d1d5db; }
     input, select { color: #111827; }
+    .blink-title {
+      color: #FFD31F;
+      animation: blinkFit 1s steps(1, end) infinite;
+    }
+    @keyframes blinkFit {
+      0%, 49.9% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .blink-title { animation: none; opacity: 1; }
+    }
   </style>
 </head>
 <body class="py-6">
-
 <div class="max-w-2xl mx-auto px-4">
   <div class="mb-6 text-center">
-    <h1 class="text-xl font-bold tracking-wide" style="color:#FFD31F">WILL THE LOAD FIT?</h1>
+    <h1 class="text-xl font-bold tracking-wide blink-title">WILL THE LOAD FIT?</h1>
     <h1 class="text-xl font-bold tracking-wide" style="color:#FFD31F">UST 90% ULLAGE FIT CALCULATOR</h1>
     <p class="text-sm text-gray-400 mt-1">Corrected generic tank chart · 3 tank check · Using whole inches</p>
   </div>
-
   <div id="tanks" class="space-y-6 mb-8"></div>
-
   <p class="text-xs text-gray-500 text-center px-2 leading-relaxed">
     90% cap = 90% Ullage of the selected rated gallons. Site-specific charts or ATG (VEEDER-ROOT) readings override this tool.
   </p>
 </div>
-
 <script>
 const CHART = {
   1000: [null, 5, 15, 28, 43, 60, 79, 99, 120, 142, 165, 189, 213, 239, 263, 291, 318, 345, 373, 401, 429, 457, 485, 514, 542, 570, 598, 626, 654, 682, 709, 735, 762, 787, 812, 836, 860, 882, 904, 924, 944, 961, 977, 991, 1003, 1011],
@@ -48,29 +55,23 @@ const CHART = {
   15000: [null, 21, 58, 107, 164, 229, 300, 377, 459, 546, 638, 734, 834, 938, 1045, 1156, 1270, 1386, 1506, 1628, 1753, 1881, 2011, 2144, 2277, 2413, 2552, 2692, 2908, 3123, 3270, 3419, 3569, 3720, 3872, 4026, 4181, 4337, 4494, 4652, 4811, 4971, 5131, 5292, 5454, 5617, 5780, 5944, 6108, 6272, 6437, 6603, 6768, 6934, 7100, 7266, 7432, 7598, 7764, 7930, 8096, 8261, 8427, 8592, 8756, 8920, 9084, 9247, 9410, 9572, 9733, 9893, 10053, 10212, 10370, 10527, 10683, 10838, 10992, 11144, 11295, 11445, 11594, 11741, 11886, 12030, 12172, 12312, 12451, 12587, 12720, 12843, 12983, 13111, 13236, 13358, 13478, 13594, 13708, 13819, 13926, 14030, 14130, 14226, 14300, 14405, 14487, 14564, 14635, 14700, 14757, 14806, 14843, 14864],
   20000: [null, 28, 77, 141, 217, 302, 396, 437, 606, 721, 842, 969, 1101, 1238, 1380, 1525, 1676, 1830, 1988, 2149, 2318, 2483, 2654, 2828, 3006, 3186, 3368, 3553, 3741, 3931, 4123, 4317, 4512, 4710, 4910, 5111, 5314, 5519, 5724, 5932, 6141, 6350, 6561, 6773, 6986, 7199, 7414, 7629, 7845, 8062, 8279, 8497, 8715, 8934, 9152, 9371, 9590, 9809, 10028, 10248, 10466, 10685, 10903, 11121, 11339, 11556, 11773, 11989, 12204, 12419, 12633, 12846, 13058, 13268, 13478, 13687, 13894, 14100, 14304, 14507, 14708, 14908, 15106, 15302, 15496, 15688, 15878, 16065, 16250, 16433, 16613, 16790, 16965, 17136, 17300, 17469, 17631, 17789, 17943, 18093, 18239, 18331, 18518, 18650, 18776, 18898, 19013, 19121, 19223, 19317, 19402, 19477, 19542, 19619],
 };
-
 const SIZES = [1000,2000,3000,4000,5000,6000,7000,8000,10000,12000,15000,20000];
-
 function fmt(n) {
   if (n === null || n === undefined || Number.isNaN(n)) return "—";
   return Number(n).toLocaleString("en-US");
 }
-
 function gallonsAt(size, inches) {
   const col = CHART[size];
   if (!col) return null;
   if (!Number.isInteger(inches) || inches < 1 || inches >= col.length || col[inches] == null) return null;
   return col[inches];
 }
-
 function maxInch(size) {
   return CHART[size].length - 1;
 }
-
 function ninetyCap(size) {
   return Math.round(size * 0.9);
 }
-
 function inchForGallons(size, gallons) {
   const col = CHART[size];
   if (!col) return null;
@@ -80,48 +81,39 @@ function inchForGallons(size, gallons) {
   }
   return "OVER";
 }
-
 function statusBadge(kind, text) {
   const cls = kind === "fit" ? "badge-fit" : kind === "nofit" ? "badge-nofit" : kind === "over" ? "badge-over" : "badge-wait";
   return `<div class="rounded-2xl py-3 px-4 text-center text-2xl font-black tracking-wide ${cls}">${text}</div>`;
 }
-
 function calcTank(id) {
   const size = Number(document.getElementById(`size-${id}`).value);
   const inchRaw = document.getElementById(`inch-${id}`).value;
   const galRaw = document.getElementById(`gal-${id}`).value;
   const out = document.getElementById(`out-${id}`);
-
   if (!size || inchRaw === "" || galRaw === "") {
     out.innerHTML = statusBadge("wait", "ENTER DATA") + `<p class="text-sm text-gray-500 mt-3 text-center">Select tank size, stick inches, and net gallons.</p>`;
     return;
   }
-
   const inches = Number(inchRaw);
   const netGal = Number(galRaw);
-
   if (!Number.isInteger(inches) || inches < 0 || netGal < 0 || Number.isNaN(netGal)) {
     out.innerHTML = statusBadge("over", "CHECK ENTRIES");
     return;
   }
-
   let currentGal;
   if (inches === 0) currentGal = 0;
   else currentGal = gallonsAt(size, inches);
-
   if (currentGal == null) {
     out.innerHTML = statusBadge("over", "OVER CHART MAX") +
       `<p class="text-sm text-gray-600 mt-3 text-center">Stick ${inches}" is past the last chart row for a ${fmt(size)} gal tank (max ${maxInch(size)}").</p>`;
     return;
   }
-
   const cap90 = ninetyCap(size);
   const after = currentGal + netGal;
   const afterInch = inchForGallons(size, after);
   const inch90 = inchForGallons(size, cap90);
   renderResult(out, size, inches, currentGal, netGal, after, afterInch, cap90, inch90);
 }
-
 function renderResult(out, size, inches, currentGal, netGal, after, afterInch, cap90, inch90) {
   const overAfter = afterInch === "OVER";
   const fits = after <= cap90;
@@ -130,15 +122,12 @@ function renderResult(out, size, inches, currentGal, netGal, after, afterInch, c
   else if (overAfter) badge = statusBadge("over", "OVER CHART MAX");
   else if (fits) badge = statusBadge("fit", "FIT");
   else badge = statusBadge("nofit", "NO FIT");
-
   const room = cap90 - after;
   const roomTxt = room >= 0
     ? `<span class="font-semibold text-emerald-700">${fmt(room)} gal remaining to 90%</span>`
     : `<span class="font-semibold text-red-700">${fmt(Math.abs(room))} gal over 90%</span>`;
-
   const afterInchTxt = overAfter ? "OVER CHART MAX" : afterInch + '"';
   const inch90Txt = inch90 === "OVER" ? "OVER CHART MAX" : inch90 + '"';
-
   out.innerHTML = `
     ${badge}
     <div class="grid grid-cols-2 gap-3 mt-4 text-sm">
@@ -163,11 +152,9 @@ function renderResult(out, size, inches, currentGal, netGal, after, afterInch, c
       </div>
     </div>`;
 }
-
 function sizeOptions() {
   return SIZES.map(s => `<option value="${s}">${s.toLocaleString()} gal (100%)</option>`).join("");
 }
-
 function tankCard(id) {
   return `
   <div class="card rounded-3xl shadow-md p-6">
@@ -175,23 +162,18 @@ function tankCard(id) {
       <i class="fas fa-database text-2xl" style="color:#219c29"></i>
       <h2 class="font-bold text-lg uppercase tracking-wide">Tank ${id}</h2>
     </div>
-
     <label class="block uppercase text-blue-600 text-xs font-bold tracking-widest mb-1">100% Tank Volume</label>
     <select id="size-${id}" onchange="calcTank(${id})" class="w-full mb-4 px-4 py-3 text-lg border border-gray-300 rounded-2xl bg-white">
       <option value="">Select size</option>
       ${sizeOptions()}
     </select>
-
     <label class="block uppercase text-blue-600 text-xs font-bold tracking-widest mb-1">Stick Reading Before (inches)</label>
     <input id="inch-${id}" type="number" inputmode="numeric" min="0" step="1" placeholder="Whole inches" oninput="calcTank(${id})" class="w-full mb-4 px-4 py-3 text-lg border border-gray-300 rounded-2xl bg-white">
-
     <label class="block uppercase text-blue-600 text-xs font-bold tracking-widest mb-1">Net Gallons to Offload</label>
     <input id="gal-${id}" type="number" inputmode="numeric" min="0" step="1" placeholder="Net gallons" oninput="calcTank(${id})" class="w-full mb-5 px-4 py-3 text-lg border border-gray-300 rounded-2xl bg-white">
-
     <div id="out-${id}"></div>
   </div>`;
 }
-
 document.getElementById("tanks").innerHTML = [1,2,3].map(tankCard).join("");
 [1,2,3].forEach(calcTank);
 </script>
