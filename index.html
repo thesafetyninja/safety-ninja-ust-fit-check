@@ -38,7 +38,7 @@
   <div id="tanks" class="space-y-6 mb-8"></div>
   <p class="text-xs text-gray-500 text-center px-2 leading-relaxed">
     90% cap = 90% Ullage of the selected rated gallons. Site-specific charts or ATG (VEEDER-ROOT) readings override this tool.
-    Custom tank uses gallons only (no stick chart for non-standard sizes).
+    Custom tank (1,000–20,000 gal) scales the nearest charted size’s inch curve.
   </p>
 </div>
 <script>
@@ -82,6 +82,9 @@ function inchForGallons(size, gallons) {
     if (col[i] >= gallons) return i;
   }
   return "OVER";
+}
+function closestSize(target) {
+  return SIZES.reduce((best, s) => Math.abs(s - target) < Math.abs(best - target) ? s : best);
 }
 function statusBadge(kind, text) {
   const cls = kind === "fit" ? "badge-fit" : kind === "nofit" ? "badge-nofit" : kind === "over" ? "badge-over" : "badge-wait";
@@ -159,22 +162,40 @@ function renderResult(out, size, inches, currentGal, netGal, after, afterInch, c
 
 function calcCustom() {
   const sizeRaw = document.getElementById("custom-size").value;
-  const currentRaw = document.getElementById("custom-current").value;
+  const inchRaw = document.getElementById("custom-inch").value;
   const netRaw = document.getElementById("custom-net").value;
   const out = document.getElementById("out-custom");
-  if (!sizeRaw || !currentRaw || !netRaw) {
-    out.innerHTML = statusBadge("wait", "ENTER DATA") + `<p class="text-sm text-gray-500 mt-3 text-center">Enter tank size, current gallons, and net gallons.</p>`;
+  if (!sizeRaw || inchRaw === "" || netRaw === "") {
+    out.innerHTML = statusBadge("wait", "ENTER DATA") + `<p class="text-sm text-gray-500 mt-3 text-center">Enter tank size (1,000–20,000 gal), stick inches, and net gallons.</p>`;
     return;
   }
-  const size = Number(sizeRaw);
-  const current = Number(currentRaw);
-  const net = Number(netRaw);
-  if (size <= 0 || current < 0 || net < 0 || Number.isNaN(size) || Number.isNaN(current) || Number.isNaN(net)) {
+  const customSize = Number(sizeRaw);
+  const inches = Number(inchRaw);
+  const netGal = Number(netRaw);
+  if (customSize < 1000 || customSize > 20000) {
+    out.innerHTML = statusBadge("over", "OUT OF RANGE") +
+      `<p class="text-sm text-gray-600 mt-3 text-center">Custom size must be between 1,000 and 20,000 gallons.</p>`;
+    return;
+  }
+  if (!Number.isInteger(inches) || inches < 0 || netGal < 0 || Number.isNaN(netGal)) {
     out.innerHTML = statusBadge("over", "CHECK ENTRIES");
     return;
   }
-  const cap90 = Math.round(size * 0.9);
-  const after = current + net;
+  const base = closestSize(customSize);
+  const scale = customSize / base;
+  let currentGal;
+  if (inches === 0) currentGal = 0;
+  else {
+    const chartGal = gallonsAt(base, inches);
+    if (chartGal == null) {
+      out.innerHTML = statusBadge("over", "OVER CHART MAX") +
+        `<p class="text-sm text-gray-600 mt-3 text-center">Stick ${inches}" is past the last chart row for the nearest size (${fmt(base)} gal, max ${maxInch(base)}").</p>`;
+      return;
+    }
+    currentGal = Math.round(chartGal * scale);
+  }
+  const cap90 = Math.round(customSize * 0.9);
+  const after = currentGal + netGal;
   const fits = after <= cap90;
   const badge = fits ? statusBadge("fit", "FIT") : statusBadge("nofit", "NO FIT");
   const room = cap90 - after;
@@ -187,23 +208,24 @@ function calcCustom() {
       <div class="rounded-xl bg-gray-50 p-3">
         <div class="text-xs font-bold text-gray-500 uppercase">90% Cap</div>
         <div class="font-bold text-lg">${fmt(cap90)} gal</div>
-        <div class="text-gray-600">of ${fmt(size)} gal</div>
+        <div class="text-gray-600">of ${fmt(customSize)} gal</div>
       </div>
       <div class="rounded-xl bg-gray-50 p-3">
-        <div class="text-xs font-bold text-gray-500 uppercase">Current</div>
-        <div class="font-bold text-lg">${fmt(current)} gal</div>
-        <div class="text-gray-600">entered</div>
+        <div class="text-xs font-bold text-gray-500 uppercase">Current (scaled)</div>
+        <div class="font-bold text-lg">${fmt(currentGal)} gal</div>
+        <div class="text-gray-600">${inches}" · nearest ${fmt(base)} gal</div>
       </div>
       <div class="rounded-xl bg-gray-50 p-3">
         <div class="text-xs font-bold text-gray-500 uppercase">After Offload</div>
         <div class="font-bold text-lg">${fmt(after)} gal</div>
-        <div class="text-gray-600">current + net</div>
+        <div class="text-gray-600">scaled + net</div>
       </div>
       <div class="rounded-xl bg-gray-50 p-3">
         <div class="text-xs font-bold text-gray-500 uppercase">Room to 90%</div>
         <div class="mt-1">${roomTxt}</div>
       </div>
-    </div>`;
+    </div>
+    <p class="text-xs text-gray-500 mt-3 text-center">Approximate: scaled from ${fmt(base)} gal chart. Site chart or ATG overrides.</p>`;
 }
 
 function sizeOptions() {
@@ -237,11 +259,11 @@ function customCard() {
       <i class="fas fa-pen-to-square text-2xl" style="color:#219c29"></i>
       <h2 class="font-bold text-lg uppercase tracking-wide">Custom Tank</h2>
     </div>
-    <p class="text-xs text-gray-500 mb-3">For tank sizes not on the chart. Enter gallons only (no stick inches).</p>
+    <p class="text-xs text-gray-500 mb-3">Any size 1,000–20,000 gal. Stick inches are scaled from the nearest charted tank.</p>
     <label class="block uppercase text-blue-600 text-xs font-bold tracking-widest mb-1">Custom 100% Tank Volume (gallons)</label>
-    <input id="custom-size" type="number" inputmode="numeric" min="1" step="1" placeholder="e.g. 8500" oninput="calcCustom()" class="w-full mb-4 px-4 py-3 text-lg border border-gray-300 rounded-2xl bg-white">
-    <label class="block uppercase text-blue-600 text-xs font-bold tracking-widest mb-1">Current Volume (gallons)</label>
-    <input id="custom-current" type="number" inputmode="numeric" min="0" step="1" placeholder="From ATG or chart" oninput="calcCustom()" class="w-full mb-4 px-4 py-3 text-lg border border-gray-300 rounded-2xl bg-white">
+    <input id="custom-size" type="number" inputmode="numeric" min="1000" max="20000" step="1" placeholder="1000–20000" oninput="calcCustom()" class="w-full mb-4 px-4 py-3 text-lg border border-gray-300 rounded-2xl bg-white">
+    <label class="block uppercase text-blue-600 text-xs font-bold tracking-widest mb-1">Stick Reading Before (inches)</label>
+    <input id="custom-inch" type="number" inputmode="numeric" min="0" step="1" placeholder="Whole inches" oninput="calcCustom()" class="w-full mb-4 px-4 py-3 text-lg border border-gray-300 rounded-2xl bg-white">
     <label class="block uppercase text-blue-600 text-xs font-bold tracking-widest mb-1">Net Gallons to Offload</label>
     <input id="custom-net" type="number" inputmode="numeric" min="0" step="1" placeholder="Net gallons" oninput="calcCustom()" class="w-full mb-5 px-4 py-3 text-lg border border-gray-300 rounded-2xl bg-white">
     <div id="out-custom"></div>
