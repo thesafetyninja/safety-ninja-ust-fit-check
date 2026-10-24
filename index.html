@@ -37,7 +37,7 @@
   </div>
   <div id="tanks" class="space-y-6 mb-8"></div>
   <p class="text-xs text-gray-500 text-center px-2 leading-relaxed">
-    90% cap = 90% Ullage of the selected rated gallons. Site-specific charts or ATG (VEEDER-ROOT) readings override this tool.
+    90% ullage of the selected rated gallons. Site-specific charts or ATG (VEEDER-ROOT) readings override this tool.
     Custom tank (1,000–20,000 gal) scales the nearest charted size’s inch curve.
   </p>
 </div>
@@ -131,15 +131,15 @@ function renderResult(out, size, inches, currentGal, netGal, after, afterInch, c
   else badge = statusBadge("nofit", "NO FIT");
   const room = cap90 - after;
   const roomTxt = room >= 0
-    ? `<span class="font-semibold text-emerald-700">${fmt(room)} gal remaining to 90%</span>`
-    : `<span class="font-semibold text-red-700">${fmt(Math.abs(room))} gal over 90%</span>`;
+    ? `<span class="font-semibold text-emerald-700">${fmt(room)} gal remaining to 90% ullage</span>`
+    : `<span class="font-semibold text-red-700">${fmt(Math.abs(room))} gal over 90% ullage</span>`;
   const afterInchTxt = overAfter ? "OVER CHART MAX" : afterInch + '"';
   const inch90Txt = inch90 === "OVER" ? "OVER CHART MAX" : inch90 + '"';
   out.innerHTML = `
     ${badge}
     <div class="grid grid-cols-2 gap-3 mt-4 text-sm">
       <div class="rounded-xl bg-gray-50 p-3">
-        <div class="text-xs font-bold text-gray-500 uppercase">90% Cap</div>
+        <div class="text-xs font-bold text-gray-500 uppercase">90% Ullage</div>
         <div class="font-bold text-lg">${fmt(cap90)} gal</div>
         <div class="text-gray-600">${inch90Txt}</div>
       </div>
@@ -154,7 +154,7 @@ function renderResult(out, size, inches, currentGal, netGal, after, afterInch, c
         <div class="text-gray-600">${afterInchTxt}</div>
       </div>
       <div class="rounded-xl bg-gray-50 p-3">
-        <div class="text-xs font-bold text-gray-500 uppercase">Room to 90%</div>
+        <div class="text-xs font-bold text-gray-500 uppercase">Room to 90% Ullage</div>
         <div class="mt-1">${roomTxt}</div>
       </div>
     </div>`;
@@ -200,13 +200,13 @@ function calcCustom() {
   const badge = fits ? statusBadge("fit", "FIT") : statusBadge("nofit", "NO FIT");
   const room = cap90 - after;
   const roomTxt = room >= 0
-    ? `<span class="font-semibold text-emerald-700">${fmt(room)} gal remaining to 90%</span>`
-    : `<span class="font-semibold text-red-700">${fmt(Math.abs(room))} gal over 90%</span>`;
+    ? `<span class="font-semibold text-emerald-700">${fmt(room)} gal remaining to 90% ullage</span>`
+    : `<span class="font-semibold text-red-700">${fmt(Math.abs(room))} gal over 90% ullage</span>`;
   out.innerHTML = `
     ${badge}
     <div class="grid grid-cols-2 gap-3 mt-4 text-sm">
       <div class="rounded-xl bg-gray-50 p-3">
-        <div class="text-xs font-bold text-gray-500 uppercase">90% Cap</div>
+        <div class="text-xs font-bold text-gray-500 uppercase">90% Ullage</div>
         <div class="font-bold text-lg">${fmt(cap90)} gal</div>
         <div class="text-gray-600">of ${fmt(customSize)} gal</div>
       </div>
@@ -221,7 +221,7 @@ function calcCustom() {
         <div class="text-gray-600">scaled + net</div>
       </div>
       <div class="rounded-xl bg-gray-50 p-3">
-        <div class="text-xs font-bold text-gray-500 uppercase">Room to 90%</div>
+        <div class="text-xs font-bold text-gray-500 uppercase">Room to 90% Ullage</div>
         <div class="mt-1">${roomTxt}</div>
       </div>
     </div>
