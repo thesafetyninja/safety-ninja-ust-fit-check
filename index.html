@@ -23,16 +23,26 @@
       0%, 49.9% { opacity: 1; }
       50%, 100% { opacity: 0; }
     }
-    .custom-blink-border {
+    .custom-card {
+      border: 3px solid #FFD31F !important;
       animation: blinkRedBorder 1s steps(1, end) infinite;
     }
     @keyframes blinkRedBorder {
       0%, 49.9% { border-color: #ef4444 !important; }
       50%, 100% { border-color: #FFD31F !important; }
     }
+    .custom-title {
+      color: #ef4444;
+      animation: blinkRedTitle 1s steps(1, end) infinite;
+    }
+    @keyframes blinkRedTitle {
+      0%, 49.9% { opacity: 1; }
+      50%, 100% { opacity: 0.15; }
+    }
     @media (prefers-reduced-motion: reduce) {
       .blink-title { animation: none; opacity: 1; }
-      .custom-blink-border { animation: none; border-color: #ef4444 !important; }
+      .custom-card { animation: none; border-color: #ef4444 !important; }
+      .custom-title { animation: none; opacity: 1; color: #ef4444; }
     }
   </style>
 </head>
@@ -262,10 +272,10 @@ function tankCard(id) {
 
 function customCard() {
   return `
-  <div class="card custom-blink-border rounded-3xl shadow-md p-6">
+  <div class="card custom-card rounded-3xl shadow-md p-6">
     <div class="flex items-center gap-3 mb-4">
       <i class="fas fa-pen-to-square text-2xl" style="color:#219c29"></i>
-      <h2 class="font-bold text-lg uppercase tracking-wide">Custom Tank</h2>
+      <h2 class="font-bold text-lg uppercase tracking-wide custom-title">Custom Tank</h2>
     </div>
     <p class="text-xs text-gray-500 mb-3">Any size 1,000–20,000 gal. Stick inches are scaled from the nearest charted tank.</p>
     <label class="block uppercase text-blue-600 text-xs font-bold tracking-widest mb-1">Custom 100% Tank Volume (gallons)</label>
